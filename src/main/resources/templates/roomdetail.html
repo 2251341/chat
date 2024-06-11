@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
     <title>Websocket ChatRoom</title>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="/webjars/bootstrap/4.3.1/dist/css/bootstrap.min.css">
     <style>
         [v-cloak] {
@@ -20,8 +18,8 @@
             text-decoration: none;
         }
         .wrap {
-            position: relative; /* 포지셔닝 컨텍스트 설정 */
-            padding-top: 0; /* 헤더 높이 만큼 여백 추가 */
+            position: relative;
+            padding-top: 0;
             height: 500px;
             overflow-y: auto;
             background-image: url('https://i.ibb.co/kHFkNNr/001-removebg-preview.png');
@@ -33,11 +31,11 @@
             background-size: 600px 600px;
         }
         .input-group-fixed {
-            position: fixed; /* 입력창을 화면 하단에 고정 */
-            bottom: 0; /* 화면의 맨 아래에 위치 */
-            width: calc(100% - 40px); /* 컨테이너 너비에 맞춤, 양옆 여백 고려 */
-            padding: 0 20px; /* 좌우 패딩 추가 */
-            box-shadow: 0 -2px 4px rgba(0,0,0,0.1); /* 상단에 그림자 효과 추가 */
+            position: fixed;
+            bottom: 0;
+            width: calc(100% - 40px);
+            padding: 0 20px;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
         }
         .wrap .chat {
             display: flex;
@@ -107,22 +105,53 @@
             content: none;
         }
         .wrap .room-name {
-            position: sticky; /* 고정 위치를 내부 상대적 위치로 변경 */
-            top: 0; /* 상단 여백 조정 */
+            position: sticky;
+            top: 0;
             z-index: 1000;
             text-align: center;
             color: #000;
             font-size: 24px;
             padding: 10px 0;
-            background-color: rgba(168, 192, 214, 0.9); /* 반투명 배경 */
-            border-radius: 5px; /* 테두리 둥글게 */
+            background-color: rgba(168, 192, 214, 0.9);
+            border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .message .sender {
             font-weight: bold;
             color: #555;
         }
+        .photo-upload-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 0;
+        }
 
+        .photo-upload-label {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          font-size: 16px;
+          color: #555;
+          border: 2px solid #ccc;
+          padding: 5px 20px;
+          border-radius: 5px;
+          background-color: #f9f9f9;
+        }
+
+        .photo-upload-label:hover {
+          background-color: #eee;
+        }
+
+        .upload-icon {
+          width: 24px;
+          height: 24px;
+
+        }
+
+        #photo-upload {
+          display: none;
+        }
     </style>
 </head>
 <body>
@@ -133,7 +162,10 @@
         </div>
         <div v-for="message in messages" :class="['chat', message.sender === '[알림]' ? 'notification' : (message.sender === sender ? 'ch2' : 'ch1')]">
             <div class="icon" v-if="message.sender !== '[알림]'"><i class="fa fa-user"></i></div>
-            <div class="textbox">{{ message.message }}</div>
+            <div class="textbox">
+                <div v-if="message.message">{{ message.message }}</div>
+                <img v-if="message.photoUrl" :src="message.photoUrl" alt="photo" style="max-width: 100%;">
+            </div>
         </div>
     </div>
     <div class="input-group">
@@ -143,10 +175,15 @@
         <input type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage" placeholder="메세지를 입력해주세요">
         <div class="input-group-append">
             <button class="btn btn-primary" type="button" @click="sendMessage">보내기</button>
+            <div class="photo-upload-wrapper">
+                <label for="photo-upload" class="photo-upload-label">
+                    <input type="file" id="photo-upload" @change="handlePhotoChange">
+                    <img src="https://i.ibb.co/2FYLdRr/free-icon-image-upload-13434886.png" alt="Upload Icon" class="upload-icon">
+                </label>
+            </div>
         </div>
     </div>
 </div>
-<!-- JavaScript -->
 <script src="/webjars/sockjs-client/1.1.2/sockjs.min.js"></script>
 <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
 <script src="/webjars/vue/2.6.14/dist/vue.min.js"></script>

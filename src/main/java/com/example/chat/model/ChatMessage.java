@@ -16,12 +16,12 @@ public class ChatMessage {
     private Long id;  // Primary key field
 
     public enum MessageType {
-        ENTER, TALK, EXIT, MATCH, MATCH_REQUEST;
+        ENTER, TALK, EXIT, MATCH, MATCH_REQUEST, PHOTO;
     }
     private MessageType type;
     private String roomId;
     private String sender;
     private String message;
-    @Column(name = "timestamp")
-    private String timestamp;
+    private String photoUrl;
+
 }

@@ -1,4 +1,4 @@
-var vm = new  Vue({
+var vm = new Vue({
     el: '#app',
     data: function() {
         return {
@@ -6,8 +6,9 @@ var vm = new  Vue({
             room: {},
             sender: '',
             message: '',
+            photo: null, // New field for the photo file
             messages: [],
-            ws: null,  // WebSocket object is included in the data attribute
+            ws: null,
             reconnectAttempts: 0
         };
     },
@@ -29,7 +30,7 @@ var vm = new  Vue({
             this.connect();
         },
         connect: function() {
-            var vm = this;  // Reference to Vue instance to use in callbacks
+            var vm = this;
             this.ws.connect({}, function(frame) {
                 vm.ws.subscribe(`/sub/chat/room/${vm.roomId}`, function(message) {
                     var recv = JSON.parse(message.body);
@@ -42,7 +43,7 @@ var vm = new  Vue({
                 }));
             }, function(error) {
                 if (vm.reconnectAttempts++ < 5) {
-                    setTimeout(vm.connect, 10000); // Reconnect logic
+                    setTimeout(vm.connect, 10000);
                     console.log("Attempt to reconnect #" + vm.reconnectAttempts);
                 } else {
                     console.error("Failed to reconnect after 5 attempts.");
@@ -59,25 +60,49 @@ var vm = new  Vue({
             });
         },
         sendMessage: function() {
-            if (!this.message.trim()) return;
-            this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify({
-                type: 'TALK',
-                roomId: this.roomId,
-                sender: this.sender,
-                message: this.message.trim()
-
-            }));
-            this.message = '';
+            if (!this.message.trim() && !this.photo) return;
+            if (this.photo) {
+                var formData = new FormData();
+                formData.append('file', this.photo);
+                axios.post('/upload', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(response => {
+                    this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify({
+                        type: 'PHOTO',
+                        roomId: this.roomId,
+                        sender: this.sender,
+                        photoUrl: response.data
+                    }));
+                    this.photo = null;
+                }).catch(error => {
+                    console.error('Error uploading photo:', error);
+                });
+            } else {
+                this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify({
+                    type: 'TALK',
+                    roomId: this.roomId,
+                    sender: this.sender,
+                    message: this.message.trim()
+                }));
+                this.message = '';
+            }
         },
         recvMessage: function(recv) {
-            // 입장 메시지가 표시되어야 하는지 확인
             const key = `entered_${this.roomId}_${recv.sender}`;
             if (recv.type === 'ENTER' && !localStorage.getItem(key)) {
-                localStorage.setItem(key, 'true');  // Set a permanent flag
+                localStorage.setItem(key, 'true');
                 this.messages.push({
                     type: recv.type,
                     sender: '[알림]',
                     message: `${recv.sender}님이 방에 들어왔습니다.`
+                });
+            } else if (recv.type === 'PHOTO') {
+                this.messages.push({
+                    type: recv.type,
+                    sender: recv.sender,
+                    photoUrl: recv.photoUrl
                 });
             } else if (recv.type !== 'ENTER') {
                 this.messages.push({
@@ -91,6 +116,9 @@ var vm = new  Vue({
                 container.scrollTop = container.scrollHeight;
             });
             localStorage.setItem(`messages_${this.roomId}`, JSON.stringify(this.messages));
+        },
+        handlePhotoChange: function(event) {
+            this.photo = event.target.files[0];
         }
     }
 });
