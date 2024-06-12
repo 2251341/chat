@@ -39,7 +39,8 @@ var vm = new Vue({
                 vm.ws.send(`/pub/chat/message/${vm.roomId}`, {}, JSON.stringify({
                     type: 'ENTER',
                     roomId: vm.roomId,
-                    sender: vm.sender
+                    sender: vm.sender,
+                    timestamp: new Date().toISOString()
                 }));
             }, function(error) {
                 if (vm.reconnectAttempts++ < 5) {
@@ -61,6 +62,12 @@ var vm = new Vue({
         },
         sendMessage: function() {
             if (!this.message.trim() && !this.photo) return;
+            const messagePayload = {
+                type: this.photo ? 'PHOTO' : 'TALK',
+                roomId: this.roomId,
+                sender: this.sender,
+                timestamp: new Date().toISOString()
+            };
             if (this.photo) {
                 var formData = new FormData();
                 formData.append('file', this.photo);
@@ -69,24 +76,17 @@ var vm = new Vue({
                         'Content-Type': 'multipart/form-data'
                     }
                 }).then(response => {
-                    this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify({
-                        type: 'PHOTO',
-                        roomId: this.roomId,
-                        sender: this.sender,
-                        photoUrl: response.data
-                    }));
+                    messagePayload.photoUrl = response.data;
+                    this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify(messagePayload));
                     this.photo = null;
+                    this.message = ''; // Clear the message input
                 }).catch(error => {
                     console.error('Error uploading photo:', error);
                 });
             } else {
-                this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify({
-                    type: 'TALK',
-                    roomId: this.roomId,
-                    sender: this.sender,
-                    message: this.message.trim()
-                }));
-                this.message = '';
+                messagePayload.message = this.message.trim();
+                this.ws.send(`/pub/chat/message/${this.roomId}`, {}, JSON.stringify(messagePayload));
+                this.message = ''; // Clear the message input
             }
         },
         recvMessage: function(recv) {
@@ -96,19 +96,22 @@ var vm = new Vue({
                 this.messages.push({
                     type: recv.type,
                     sender: '[알림]',
-                    message: `${recv.sender}님이 방에 들어왔습니다.`
+                    message: `${recv.sender}님이 방에 들어왔습니다.`,
+                    timestamp: recv.timestamp
                 });
             } else if (recv.type === 'PHOTO') {
                 this.messages.push({
                     type: recv.type,
                     sender: recv.sender,
-                    photoUrl: recv.photoUrl
+                    photoUrl: recv.photoUrl,
+                    timestamp: recv.timestamp
                 });
             } else if (recv.type !== 'ENTER') {
                 this.messages.push({
                     type: recv.type,
                     sender: recv.sender,
-                    message: recv.message
+                    message: recv.message,
+                    timestamp: recv.timestamp
                 });
             }
             this.$nextTick(() => {
@@ -118,7 +121,17 @@ var vm = new Vue({
             localStorage.setItem(`messages_${this.roomId}`, JSON.stringify(this.messages));
         },
         handlePhotoChange: function(event) {
-            this.photo = event.target.files[0];
+            const file = event.target.files[0];
+            this.photo = file;
+            if (file) {
+                this.message = `Selected file: ${file.name}`;
+            }
+        },
+        handleKeyPress: function(event) {
+            if (event.key === 'ENTER') {
+                this.sendMessage();
+            }
         }
+
     }
 });

@@ -3,6 +3,8 @@ package com.example.chat.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,5 +25,7 @@ public class ChatMessage {
     private String sender;
     private String message;
     private String photoUrl;
+    private LocalDateTime timestamp;
+
 
 }

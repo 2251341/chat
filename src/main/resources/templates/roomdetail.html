@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="/webjars/bootstrap/4.3.1/dist/css/bootstrap.min.css">
     <style>
+
         [v-cloak] {
             display: none;
         }
+
         * {
             padding: 0;
             margin: 0;
@@ -64,7 +66,7 @@
             max-width: calc(100% - 70px);
             padding: 10px;
             margin-top: 7px;
-            font-size: 13px;
+            font-size: 18px;
             border-radius: 10px;
         }
         .wrap .chat .textbox::before {
@@ -121,36 +123,60 @@
             color: #555;
         }
         .photo-upload-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: 0;
+            display: flex;
+            align-items: center;
+
+            justify-content: center;
+            margin-top: 0;
+            height: 38px;
         }
 
         .photo-upload-label {
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          font-size: 16px;
-          color: #555;
-          border: 2px solid #ccc;
-          padding: 5px 20px;
-          border-radius: 5px;
-          background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: #555;
+            border: 2px solid #ccc;
+            padding: 5px 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            height: 100%;
         }
 
         .photo-upload-label:hover {
-          background-color: #eee;
+            background-color: #eee;
         }
 
         .upload-icon {
-          width: 24px;
-          height: 24px;
-
+            width: 24px;
+            height: 24px;
         }
 
         #photo-upload {
-          display: none;
+            display: none;
+        }
+
+        .input-group {
+            margin-bottom: 0;
+        }
+
+        .input-group-prepend, .input-group-append {
+            height: 38px;
+        }
+
+        .form-control {
+            height: 38px;
+        }
+
+        .btn-primary {
+            height: 38px;
+        }
+        .timestamp {
+            font-size: 0.8rem;
+            color: gray;
+            text-align: right;
         }
     </style>
 </head>
@@ -165,22 +191,23 @@
             <div class="textbox">
                 <div v-if="message.message">{{ message.message }}</div>
                 <img v-if="message.photoUrl" :src="message.photoUrl" alt="photo" style="max-width: 100%;">
+                <div class="timestamp" v-if="message.timestamp">{{ new Date(message.timestamp).toLocaleString() }}</div>
             </div>
         </div>
     </div>
     <div class="input-group">
         <div class="input-group-prepend">
-            <label class="input-group-text">내용</label>
-        </div>
-        <input type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage" placeholder="메세지를 입력해주세요">
-        <div class="input-group-append">
-            <button class="btn btn-primary" type="button" @click="sendMessage">보내기</button>
             <div class="photo-upload-wrapper">
                 <label for="photo-upload" class="photo-upload-label">
                     <input type="file" id="photo-upload" @change="handlePhotoChange">
                     <img src="https://i.ibb.co/2FYLdRr/free-icon-image-upload-13434886.png" alt="Upload Icon" class="upload-icon">
                 </label>
             </div>
+        </div>
+        <input type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage" placeholder="메세지를 입력해주세요">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="button" @click="sendMessage">보내기</button>
+
         </div>
     </div>
 </div>
